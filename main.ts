@@ -3,6 +3,32 @@ namespace SpriteKind {
     export const SHMUP = SpriteKind.create()
     export const mathSprite = SpriteKind.create()
 }
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
+    music.stopAllSounds()
+    music.play(music.createSoundEffect(WaveShape.Noise, 2559, 2620, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.UntilDone)
+    game.reset()
+})
+controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (BulletsRemaining > 0) {
+        BulletsRemaining += -1
+        sprites.destroy(bullet)
+        bulletSpeed = 0
+        Gun.setImage(assets.image`ShotgunPow`)
+        bullet = sprites.create(assets.image`bullet`, SpriteKind.Projectile)
+        bullet.setScale(0.5, ScaleAnchor.Middle)
+        bulletDirection = spriteutils.degreesToRadians(FacingDirection)
+        timer.after(100, function () {
+            Gun.setImage(assets.image`Shotgun`)
+        })
+        Render.move(Player, 15)
+        timer.after(2000, function () {
+            sprites.destroy(bullet)
+        })
+    } else {
+        AbleToShoot = false
+        BulletsRemaining = 0
+    }
+})
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
     if (sprite.tileKindAt(TileDirection.Left, sprites.dungeon.purpleOuterNorth1) || sprite.tileKindAt(TileDirection.Right, sprites.dungeon.purpleOuterNorth1) || sprite.tileKindAt(TileDirection.Top, sprites.dungeon.purpleOuterNorth1) || sprite.tileKindAt(TileDirection.Bottom, sprites.dungeon.purpleOuterNorth1)) {
         if (sprite.tilemapLocation().column == 29 && sprite.tilemapLocation().row == 15) {
@@ -28,26 +54,8 @@ controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
         AbleToShoot = true
     })
 })
-controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (BulletsRemaining > 0) {
-        BulletsRemaining += -1
-        sprites.destroy(bullet)
-        bulletSpeed = 0
-        Gun.setImage(assets.image`ShotgunPow`)
-        bullet = sprites.create(assets.image`bullet`, SpriteKind.Projectile)
-        bullet.setScale(0.5, ScaleAnchor.Middle)
-        bulletDirection = spriteutils.degreesToRadians(FacingDirection)
-        timer.after(100, function () {
-            Gun.setImage(assets.image`Shotgun`)
-        })
-        Render.move(Player, 15)
-        timer.after(2000, function () {
-            sprites.destroy(bullet)
-        })
-    } else {
-        AbleToShoot = false
-        BulletsRemaining = 0
-    }
+scene.onHitWall(SpriteKind.Projectile, function (sprite, location) {
+    sprites.destroy(sprite)
 })
 function Spawn () {
     for (let gHostSprites of tiles.getTilesByType(assets.tile`myTile`)) {
@@ -63,20 +71,13 @@ function Spawn () {
         )
     }
 }
-scene.onHitWall(SpriteKind.Projectile, function (sprite, location) {
-    sprites.destroy(sprite)
-})
 sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, otherSprite) {
     otherSprite.startEffect(effects.disintegrate, 500)
     music.play(music.createSoundEffect(WaveShape.Noise, 3343, 3071, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.UntilDone)
     sprites.destroy(sprite)
     sprites.destroy(otherSprite, effects.disintegrate, 250)
 })
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function (sprite, otherSprite) {
-    music.stopAllSounds()
-    music.play(music.createSoundEffect(WaveShape.Noise, 2559, 2620, 255, 0, 500, SoundExpressionEffect.None, InterpolationCurve.Linear), music.PlaybackMode.UntilDone)
-    game.reset()
-})
+let enemyCount: Sprite[] = []
 let gHost: Sprite = null
 let bulletDirection = 0
 let bulletSpeed = 0
@@ -126,4 +127,6 @@ game.onUpdate(function () {
     } else {
         bulletSpeed = 0
     }
+    enemyCount = sprites.allOfKind(SpriteKind.Enemy)
+    info.setScore(enemyCount)
 })
