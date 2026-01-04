@@ -77,7 +77,7 @@ sprites.onOverlap(SpriteKind.Projectile, SpriteKind.Enemy, function (sprite, oth
     sprites.destroy(sprite)
     sprites.destroy(otherSprite, effects.disintegrate, 250)
 })
-let enemyCount: Sprite[] = []
+let enemyCount = 0
 let gHost: Sprite = null
 let bulletDirection = 0
 let bulletSpeed = 0
@@ -127,6 +127,6 @@ game.onUpdate(function () {
     } else {
         bulletSpeed = 0
     }
-    enemyCount = sprites.allOfKind(SpriteKind.Enemy)
+    enemyCount = sprites.allOfKind(SpriteKind.Enemy).length
     info.setScore(enemyCount)
 })
